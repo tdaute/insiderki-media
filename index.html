@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Manager · KNOWLEDGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#0d1424; --panel:#111a2c;
+  --orange:#e8863c; --orange-br:#f59e42;
+  --white:#fff; --grey:#9aa3b2; --grey2:#6b7280;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.16);
+  --green:#3fb27f; --red:#e05252; --amber:#e0a83c;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Inter',system-ui,sans-serif;color:var(--white);min-height:100vh;}
+
+/* Atmosphere */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 90vw 60vh at 50% 0%,rgba(232,134,60,.13) 0%,transparent 62%),
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:auto,110px 110px,110px 110px;
+}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:2rem 1.5rem 5rem;}
+
+/* Header */
+header{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:.85rem;}
+.brand svg{overflow:visible;flex-shrink:0;}
+.brand-txt .n{font-size:.9rem;font-weight:600;letter-spacing:.22em;line-height:1.1;}
+.brand-txt .s{font-size:.55rem;font-weight:500;letter-spacing:.4em;color:var(--orange);}
+.title{margin-left:auto;text-align:right;}
+.title h1{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;}
+.title p{font-size:.75rem;color:var(--grey2);}
+
+/* Controls bar */
+.bar{
+  display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;
+  background:rgba(255,255,255,.028);border:1px solid var(--line);
+  border-radius:12px;padding:.85rem 1rem;margin-bottom:1.1rem;
+}
+label.fl{font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--grey2);}
+select,input[type=text]{
+  font-family:inherit;font-size:.85rem;
+  background:rgba(255,255,255,.05);color:var(--white);
+  border:1px solid var(--line2);border-radius:8px;padding:.5rem .8rem;
+  min-width:190px;
+}
+select:focus,input:focus{outline:2px solid var(--orange);outline-offset:1px;}
+select option{background:#111a2c;}
+.btn{
+  font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;
+  border-radius:8px;padding:.55rem 1.1rem;border:1px solid transparent;
+  transition:background .18s,border-color .18s;
+}
+.btn-p{background:rgba(232,134,60,.15);color:var(--orange-br);border-color:rgba(232,134,60,.42);}
+.btn-p:hover{background:rgba(232,134,60,.26);}
+.btn-s{background:rgba(255,255,255,.05);color:var(--grey);border-color:var(--line2);}
+.btn-s:hover{background:rgba(255,255,255,.1);color:var(--white);}
+.btn:focus-visible{outline:2px solid var(--orange);outline-offset:2px;}
+.spacer{flex:1;}
+
+/* Stats */
+.stats{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.3rem;}
+.chip{
+  font-size:.75rem;font-weight:600;padding:.35rem .85rem;border-radius:999px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--grey);
+}
+.chip b{color:var(--white);}
+.chip.ok{background:rgba(63,178,127,.12);border-color:rgba(63,178,127,.35);color:#6cd3a4;}
+.chip.open{background:rgba(232,134,60,.12);border-color:rgba(232,134,60,.35);color:var(--orange-br);}
+
+/* Progress */
+.prog{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:1.6rem;}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--green));border-radius:3px;transition:width .4s;}
+
+/* Slide group */
+.group{margin-bottom:1.9rem;}
+.group-h{
+  display:flex;align-items:baseline;gap:.7rem;margin-bottom:.8rem;
+  padding-bottom:.55rem;border-bottom:1px solid var(--line);
+}
+.group-h .no{
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;
+  color:var(--orange);background:rgba(232,134,60,.12);
+  padding:.2rem .55rem;border-radius:5px;
+}
+.group-h h2{font-size:.98rem;font-weight:700;letter-spacing:-.015em;}
+.group-h .cnt{margin-left:auto;font-size:.72rem;color:var(--grey2);}
+
+/* Slot grid */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:.8rem;}
+.slot{
+  background:rgba(255,255,255,.026);border:1px solid var(--line);
+  border-radius:11px;padding:.75rem;
+  display:flex;flex-direction:column;gap:.55rem;
+  transition:border-color .2s,background .2s;
+}
+.slot.filled{border-color:rgba(63,178,127,.34);background:rgba(63,178,127,.045);}
+.slot.drag{border-color:var(--orange);background:rgba(232,134,60,.1);}
+.slot.busy{opacity:.6;pointer-events:none;}
+
+.drop{
+  position:relative;border:1px dashed var(--line2);border-radius:8px;
+  height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.25rem;cursor:pointer;overflow:hidden;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 9px,rgba(255,255,255,.01) 9px 18px);
+  transition:border-color .2s;
+}
+.drop:hover{border-color:var(--orange);}
+.drop .ic{font-size:1.15rem;opacity:.45;}
+.drop .tx{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey2);text-align:center;padding:0 .5rem;}
+.drop img,.drop video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.drop .kind{
+  position:absolute;top:.4rem;left:.4rem;z-index:2;
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;font-weight:600;
+  background:rgba(10,14,26,.85);border:1px solid var(--line2);
+  padding:.13rem .38rem;border-radius:4px;letter-spacing:.06em;
+}
+.slot-lbl{font-size:.78rem;font-weight:600;line-height:1.3;}
+.slot-key{
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  color:var(--grey2);word-break:break-all;
+}
+.slot-act{display:flex;gap:.4rem;}
+.mini{
+  flex:1;font-family:inherit;font-size:.68rem;font-weight:600;cursor:pointer;
+  padding:.32rem .5rem;border-radius:6px;border:1px solid var(--line2);
+  background:rgba(255,255,255,.05);color:var(--grey);transition:background .18s;
+}
+.mini:hover{background:rgba(255,255,255,.11);color:var(--white);}
+.mini.del{border-color:rgba(224,82,82,.35);color:#f08b8b;}
+.mini.del:hover{background:rgba(224,82,82,.16);}
+.mini:focus-visible{outline:2px solid var(--orange);outline-offset:1px;}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%) translateY(120%);
+  background:rgba(13,20,36,.96);backdrop-filter:blur(12px);
+  border:1px solid var(--line2);border-radius:10px;
+  padding:.75rem 1.4rem;font-size:.85rem;z-index:200;
+  transition:transform .3s;box-shadow:0 12px 40px rgba(0,0,0,.5);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(63,178,127,.5);}
+.toast.err{border-color:rgba(224,82,82,.5);}
+
+/* Modal */
+.modal{
+  position:fixed;inset:0;background:rgba(5,7,13,.86);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;z-index:300;padding:1.5rem;
+}
+.modal.show{display:flex;}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
+  padding:1.6rem;max-width:760px;width:100%;max-height:82vh;overflow:auto;
+}
+.modal-box h3{font-size:1.05rem;font-weight:700;margin-bottom:.4rem;}
+.modal-box p{font-size:.82rem;color:var(--grey);margin-bottom:1rem;line-height:1.5;}
+pre{
+  background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:9px;
+  padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  line-height:1.55;overflow:auto;max-height:46vh;color:#c3cad6;white-space:pre;
+}
+.modal-act{display:flex;gap:.6rem;margin-top:1rem;justify-content:flex-end;}
+
+.empty{text-align:center;padding:4rem 1rem;color:var(--grey2);}
+.empty .ic{font-size:2rem;opacity:.4;margin-bottom:.7rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg width="42" height="42" viewBox="0 0 64 64" fill="none">
+        <g stroke="#e8863c" stroke-width="1" opacity=".5">
+          <line x1="32" y1="32" x2="32" y2="10"/><line x1="32" y1="32" x2="50" y2="19"/>
+          <line x1="32" y1="32" x2="54" y2="38"/><line x1="32" y1="32" x2="41" y2="53"/>
+          <line x1="32" y1="32" x2="20" y2="52"/><line x1="32" y1="32" x2="10" y2="36"/>
+          <line x1="32" y1="32" x2="15" y2="18"/>
+        </g>
+        <g stroke="#e8863c" stroke-width=".7" opacity=".26">
+          <line x1="32" y1="10" x2="50" y2="19"/><line x1="50" y1="19" x2="54" y2="38"/>
+          <line x1="54" y1="38" x2="41" y2="53"/><line x1="20" y1="52" x2="10" y2="36"/>
+          <line x1="10" y1="36" x2="15" y2="18"/><line x1="15" y1="18" x2="32" y2="10"/>
+          <line x1="41" y1="53" x2="20" y2="52"/>
+        </g>
+        <g fill="#e8863c">
+          <circle cx="32" cy="10" r="3"/><circle cx="50" cy="19" r="2.2"/>
+          <circle cx="54" cy="38" r="2.8"/><circle cx="41" cy="53" r="2"/>
+          <circle cx="20" cy="52" r="2.6"/><circle cx="10" cy="36" r="2.2"/>
+          <circle cx="15" cy="18" r="2.4"/>
+        </g>
+        <circle cx="32" cy="32" r="10" fill="#e8863c" opacity=".2"/>
+        <circle cx="32" cy="32" r="6.4" fill="#f59e42"/>
+        <circle cx="32" cy="32" r="2.7" fill="#0a0e1a"/>
+      </svg>
+      <div class="brand-txt"><div class="n">KNOWLEDGE</div><div class="s">AI</div></div>
+    </div>
+    <div class="title">
+      <h1>Media Manager</h1>
+      <p>Bilder &amp; Videos für Präsentationen</p>
+    </div>
+  </header>
+
+  <div class="bar">
+    <label class="fl" for="presSel">Präsentation</label>
+    <select id="presSel"></select>
+    <label class="fl" for="filterSel">Filter</label>
+    <select id="filterSel">
+      <option value="all">Alle Slots</option>
+      <option value="open">Nur offene</option>
+      <option value="filled">Nur befüllte</option>
+    </select>
+    <span class="spacer"></span>
+    <button class="btn btn-s" id="newPres">+ Neue Präsentation</button>
+    <button class="btn btn-p" id="exportBtn">Config exportieren</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="prog"><i id="progBar" style="width:0%"></i></div>
+
+  <div id="content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3 id="mTitle">MEDIA-Konfiguration</h3>
+    <p id="mDesc">Diesen Block in der Präsentation als <code>MEDIA</code>-Objekt ersetzen.</p>
+    <pre id="mCode"></pre>
+    <div class="modal-act">
+      <button class="btn btn-s" id="mClose">Schließen</button>
+      <button class="btn btn-p" id="mCopy">In Zwischenablage</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="filePick" style="display:none">
+
+<script>
+const SB_URL  = 'https://nblyvxnahkbvtatathbh.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ibHl2eG5haGtidnRhdGF0aGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzA5MTUsImV4cCI6MjA5NjE0NjkxNX0.o9-lp1ILDPFNcLOr_C3RMFsIFxVDkSCA0Zob1X__rB0';
+const BUCKET  = 'workshop-assets';
+
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let presList = [], curPres = null, slots = [], filter = 'all', pendingSlot = null;
+
+/* ---------- Helpers ---------- */
+function toast(msg, kind){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (kind || '');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{ t.className = 'toast ' + (kind||''); }, 2800);
+}
+const isVid = u => /\.(mp4|webm|mov)(\?|$)/i.test(u || '');
+
+/* ---------- Laden ---------- */
+async function loadPresentations(){
+  const { data, error } = await sb.from('presentations').select('*').order('created_at');
+  if(error){ toast('Fehler: ' + error.message, 'err'); return; }
+  presList = data || [];
+  const sel = document.getElementById('presSel');
+  sel.innerHTML = presList.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+  if(presList.length){
+    curPres = presList[0];
+    await loadSlots();
+  } else {
+    document.getElementById('content').innerHTML =
+      '<div class="empty"><div class="ic">▣</div>Noch keine Präsentation angelegt.</div>';
+  }
+}
+
+async function loadSlots(){
+  if(!curPres) return;
+  const { data, error } = await sb.from('presentation_slots')
+    .select('*').eq('presentation_id', curPres.id).order('sort_order');
+  if(error){ toast('Fehler: ' + error.message, 'err'); return; }
+  slots = data || [];
+  render();
+}
+
+/* ---------- Rendern ---------- */
+function render(){
+  const total  = slots.length;
+  const filled = slots.filter(s=>s.public_url).length;
+  const pct    = total ? Math.round(filled/total*100) : 0;
+
+  document.getElementById('stats').innerHTML = `
+    <span class="chip"><b>${total}</b> Slots gesamt</span>
+    <span class="chip ok"><b>${filled}</b> befüllt</span>
+    <span class="chip open"><b>${total-filled}</b> offen</span>
+    <span class="chip"><b>${pct} %</b> fertig</span>`;
+  document.getElementById('progBar').style.width = pct + '%';
+
+  const vis = slots.filter(s=>
+    filter==='all' ? true : filter==='open' ? !s.public_url : !!s.public_url);
+
+  if(!vis.length){
+    document.getElementById('content').innerHTML =
+      '<div class="empty"><div class="ic">✓</div>Keine Slots in diesem Filter.</div>';
+    return;
+  }
+
+  // nach Folie gruppieren
+  const groups = {};
+  vis.forEach(s=>{
+    const k = s.slide_number ?? 0;
+    (groups[k] = groups[k] || {title: s.slide_title, items: []}).items.push(s);
+  });
+
+  document.getElementById('content').innerHTML = Object.keys(groups)
+    .sort((a,b)=>a-b)
+    .map(k=>{
+      const g = groups[k];
+      const done = g.items.filter(s=>s.public_url).length;
+      return `<section class="group">
+        <div class="group-h">
+          <span class="no">Folie ${k}</span>
+          <h2>${g.title || ''}</h2>
+          <span class="cnt">${done} / ${g.items.length}</span>
+        </div>
+        <div class="slots">${g.items.map(slotCard).join('')}</div>
+      </section>`;
+    }).join('');
+
+  wire();
+}
+
+function slotCard(s){
+  const has = !!s.public_url;
+  const prev = has
+    ? (isVid(s.public_url)
+        ? `<video src="${s.public_url}" muted loop autoplay playsinline></video>`
+        : `<img src="${s.public_url}" alt="${s.label}">`)
+    : `<div class="ic">▣</div><div class="tx">Datei hierher ziehen<br>oder klicken</div>`;
+  const kindLbl = s.media_kind === 'video' ? 'VIDEO' : s.media_kind === 'any' ? 'BILD/VIDEO' : 'BILD';
+
+  return `<div class="slot ${has?'filled':''}" data-id="${s.id}" data-key="${s.slot_key}">
+    <div class="drop" data-drop="${s.id}">
+      <span class="kind">${kindLbl}</span>
+      ${prev}
+    </div>
+    <div>
+      <div class="slot-lbl">${s.label}</div>
+      <div class="slot-key">${s.slot_key}</div>
+    </div>
+    <div class="slot-act">
+      <button class="mini" data-up="${s.id}">${has?'Ersetzen':'Hochladen'}</button>
+      ${has?`<button class="mini del" data-rm="${s.id}">Entfernen</button>`:''}
+    </div>
+  </div>`;
+}
+
+/* ---------- Events ---------- */
+function wire(){
+  document.querySelectorAll('[data-drop]').forEach(el=>{
+    const id = el.dataset.drop;
+    el.onclick = ()=> pick(id);
+    el.ondragover = e=>{ e.preventDefault(); el.closest('.slot').classList.add('drag'); };
+    el.ondragleave = ()=> el.closest('.slot').classList.remove('drag');
+    el.ondrop = e=>{
+      e.preventDefault();
+      el.closest('.slot').classList.remove('drag');
+      const f = e.dataTransfer.files[0];
+      if(f) upload(id, f);
+    };
+  });
+  document.querySelectorAll('[data-up]').forEach(b=> b.onclick = ()=> pick(b.dataset.up));
+  document.querySelectorAll('[data-rm]').forEach(b=> b.onclick = ()=> remove(b.dataset.rm));
+}
+
+function pick(id){
+  pendingSlot = id;
+  const s  = slots.find(x=>x.id===id);
+  const fp = document.getElementById('filePick');
+  fp.accept = s.media_kind === 'video' ? 'video/*'
+            : s.media_kind === 'any'   ? 'image/*,video/*' : 'image/*';
+  fp.value = '';
+  fp.click();
+}
+
+document.getElementById('filePick').onchange = e=>{
+  const f = e.target.files[0];
+  if(f && pendingSlot) upload(pendingSlot, f);
+};
+
+/* ---------- Upload ---------- */
+async function upload(slotId, file){
+  const s = slots.find(x=>x.id===slotId);
+  if(!s) return;
+
+  if(file.size > 50*1024*1024){ toast('Datei zu groß (max. 50 MB)','err'); return; }
+
+  const card = document.querySelector(`.slot[data-id="${slotId}"]`);
+  card?.classList.add('busy');
+  toast('Lade hoch …');
+
+  const ext  = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `${curPres.slug}/${s.slot_key}-${Date.now()}.${ext}`;
+
+  const { error: upErr } = await sb.storage.from(BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if(upErr){ card?.classList.remove('busy'); toast('Upload fehlgeschlagen: '+upErr.message,'err'); return; }
+
+  const { data:{ publicUrl } } = sb.storage.from(BUCKET).getPublicUrl(path);
+
+  // alte Datei aufräumen
+  if(s.storage_path && s.storage_path !== path){
+    await sb.storage.from(BUCKET).remove([s.storage_path]);
+  }
+
+  const { error: dbErr } = await sb.from('presentation_slots').update({
+    storage_path: path, public_url: publicUrl,
+    mime_type: file.type, file_size: file.size
+  }).eq('id', slotId);
+
+  card?.classList.remove('busy');
+  if(dbErr){ toast('DB-Fehler: '+dbErr.message,'err'); return; }
+
+  toast('„'+s.label+'“ gespeichert','ok');
+  await loadSlots();
+}
+
+async function remove(slotId){
+  const s = slots.find(x=>x.id===slotId);
+  if(!s || !confirm(`„${s.label}“ wirklich entfernen?`)) return;
+  if(s.storage_path) await sb.storage.from(BUCKET).remove([s.storage_path]);
+  await sb.from('presentation_slots').update({
+    storage_path:null, public_url:null, mime_type:null, file_size:null
+  }).eq('id', slotId);
+  toast('Entfernt','ok');
+  await loadSlots();
+}
+
+/* ---------- Export ---------- */
+function exportConfig(){
+  const lines = slots.map(s=>{
+    const v = s.public_url || '';
+    return `  ${s.slot_key.padEnd(24)}: '${v}',`;
+  });
+  const code =
+`/* MEDIA-Konfiguration — ${curPres.title}
+   Erzeugt am ${new Date().toLocaleString('de-DE')} */
+const MEDIA = {
+${lines.join('\n')}
+
+  quizImageAnswer          : 'B',
+  quizVideoAnswer          : 'A'
+};`;
+  document.getElementById('mCode').textContent = code;
+  document.getElementById('mTitle').textContent = 'MEDIA-Konfiguration — ' + curPres.title;
+  document.getElementById('modal').classList.add('show');
+}
+
+document.getElementById('exportBtn').onclick = exportConfig;
+document.getElementById('mClose').onclick = ()=> document.getElementById('modal').classList.remove('show');
+document.getElementById('mCopy').onclick = async ()=>{
+  try{
+    await navigator.clipboard.writeText(document.getElementById('mCode').textContent);
+    toast('In Zwischenablage kopiert','ok');
+  }catch{ toast('Kopieren nicht möglich — bitte manuell markieren','err'); }
+};
+document.getElementById('modal').onclick = e=>{
+  if(e.target.id === 'modal') e.target.classList.remove('show');
+};
+
+/* ---------- Neue Präsentation ---------- */
+document.getElementById('newPres').onclick = async ()=>{
+  const title = prompt('Titel der neuen Präsentation:');
+  if(!title) return;
+  const slug = title.toLowerCase()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const { error } = await sb.from('presentations').insert({ slug, title });
+  if(error){ toast('Fehler: '+error.message,'err'); return; }
+  toast('Angelegt — Slots kann Claude jetzt einspielen','ok');
+  await loadPresentations();
+};
+
+/* ---------- Selects ---------- */
+document.getElementById('presSel').onchange = async e=>{
+  curPres = presList.find(p=>p.id === e.target.value);
+  await loadSlots();
+};
+document.getElementById('filterSel').onchange = e=>{ filter = e.target.value; render(); };
+
+loadPresentations();
+</script>
+</body>
+</html>
