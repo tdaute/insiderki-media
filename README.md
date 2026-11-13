@@ -12,7 +12,7 @@ Präsentation zieht sie beim nächsten Laden automatisch.
 
 ## Backend
 
-Supabase-Projekt `ai-governance` (`nblyvxnahkbvtatathbh`)
+Supabase-Projekt `kodex` (`egaemrtidvkzovfvzqaz`)
 
 - `presentations` — eine Zeile pro Präsentation
 - `presentation_slots` — eine Zeile pro Bild-/Videostelle
